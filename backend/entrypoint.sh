@@ -27,11 +27,6 @@ echo "✅ Seed done. Checking site count..."
 python manage.py shell -c "from monitor.models import Site; print(f'   → {Site.objects.count()} sites in database')"
 
 echo "==================================================="
-echo " Starting Gunicorn server on port 8000"
+echo " Starting: ${@:-gunicorn (default)}"
 echo "==================================================="
-exec gunicorn rectifier_monitor.wsgi:application \
-    --bind 0.0.0.0:8000 \
-    --workers 3 \
-    --timeout 120 \
-    --access-logfile - \
-    --error-logfile -
+exec "$@"
