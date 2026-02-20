@@ -1,7 +1,20 @@
 """
-Seed sample sites untuk testing
-Run: python manage.py shell < seed_sites.py
+Seed sample sites untuk production
+Bisa dijalankan langsung: python seed_sites.py
+Atau via manage.py shell: python manage.py shell < seed_sites.py
 """
+
+import os
+import django
+
+# Setup Django jika belum diinisialisasi (untuk standalone run)
+if not os.environ.get('DJANGO_SETTINGS_MODULE'):
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rectifier_monitor.settings')
+
+try:
+    django.setup()
+except RuntimeError:
+    pass  # Already setup (e.g. called via manage.py shell)
 
 from monitor.models import Site
 
@@ -134,18 +147,20 @@ print("\n" + "="*50)
 print("Seeding Sample Sites...")
 print("="*50 + "\n")
 
+created_count = 0
 for site_data in sites_data:
     site, created = Site.objects.get_or_create(
         site_code=site_data['site_code'],
         defaults=site_data
     )
-    
+
     if created:
+        created_count += 1
         print(f"✓ Created: {site.site_name} ({site.site_code})")
     else:
-        print(f"- Exists: {site.site_name} ({site.site_code})")
+        print(f"- Exists:  {site.site_name} ({site.site_code})")
 
 print("\n" + "="*50)
-print("✅ Seeding Complete!")
+print(f"✅ Seeding Complete! {created_count} new sites created.")
 print("="*50)
-print(f"\nTotal sites: {Site.objects.count()}")
+print(f"\nTotal sites in database: {Site.objects.count()}")
