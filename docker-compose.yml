@@ -87,13 +87,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://103.176.45.14:3000/api
-        NEXT_PUBLIC_MAP_CENTER_LAT: -6.2
-        NEXT_PUBLIC_MAP_CENTER_LNG: 106.8
-        NEXT_PUBLIC_MAP_ZOOM: 11
     container_name: rectifier_frontend
     restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://103.176.45.14:3000/api
+      - NEXT_PUBLIC_MAP_CENTER_LAT=-6.2
+      - NEXT_PUBLIC_MAP_CENTER_LNG=106.8
+      - NEXT_PUBLIC_MAP_ZOOM=11
     networks:
       - rectifier_net
 
