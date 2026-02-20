@@ -56,7 +56,7 @@ services:
     environment:
       - DB_HOST=db
       - DB_PORT=5432
-    command: python /app/mqtt_listener_multisite.py
+    command: python mqtt_listener_multisite.py
     depends_on:
       db:
         condition: service_healthy
@@ -74,7 +74,7 @@ services:
     restart: unless-stopped
     env_file:
       - ./backend/.env.production
-    command: python /app/mqtt_publisher_multisite.py
+    command: python mqtt_publisher_multisite.py
     volumes:
       - ./mqtt_publisher_multisite.py:/app/mqtt_publisher_multisite.py:ro
     depends_on:
