@@ -78,7 +78,10 @@ services:
     restart: unless-stopped
     env_file:
       - ./backend/.env.production
-    command: python mqtt_publisher_multisite.py
+    command: python /app/mqtt_publisher_multisite.py
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
     volumes:
       - ./mqtt_publisher_multisite.py:/app/mqtt_publisher_multisite.py:ro
     depends_on:
