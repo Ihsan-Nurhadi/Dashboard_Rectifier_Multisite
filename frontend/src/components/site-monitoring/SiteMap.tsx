@@ -1,6 +1,4 @@
-"use client";
-
-import { MapContainer, TileLayer, Marker, Popup, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Plus, Minus, Maximize2, PanelLeft } from 'lucide-react';
@@ -155,31 +153,25 @@ export default function SiteMap({
 }: SiteMapProps) {
     const [map, setMap] = useState<L.Map | null>(null);
 
-    // Inject Leaflet tooltip styles (replaces styled-jsx which is not supported in App Router)
-    useEffect(() => {
-        const style = document.createElement('style');
-        style.id = 'leaflet-custom-styles';
-        style.innerHTML = `
-            .leaflet-tooltip-bottom { margin-top: 6px; }
-            .custom-map-tooltip {
-                background-color: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
-                font-size: 10px;
-                font-weight: bold;
-                color: #0f172a;
-                text-shadow: 0 0 2px white, 0 0 4px white;
-            }
-            .custom-map-tooltip::before { display: none !important; }
-        `;
-        if (!document.getElementById('leaflet-custom-styles')) {
-            document.head.appendChild(style);
-        }
-        return () => { style.remove(); };
-    }, []);
-
     return (
         <div className="relative w-full h-full">
+            <style jsx global>{`
+                .leaflet-tooltip-bottom {
+                    margin-top: 6px;
+                }
+                .custom-map-tooltip {
+                    background-color: transparent !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    font-size: 10px;
+                    font-weight: bold;
+                    color: #0f172a;
+                    text-shadow: 0 0 2px white, 0 0 4px white;
+                }
+                .custom-map-tooltip::before {
+                    display: none !important;
+                }
+            `}</style>
             <MapContainer
                 center={[-6.5, 107.2]}
                 zoom={9}
