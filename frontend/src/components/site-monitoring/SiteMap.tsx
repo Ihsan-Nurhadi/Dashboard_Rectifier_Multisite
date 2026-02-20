@@ -1,8 +1,9 @@
 import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Plus, Minus, Move, Maximize2, PanelLeft, Navigation } from 'lucide-react';
+import { Plus, Minus, Maximize2, PanelLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Site } from '@/services/api';
 
 // Custom Icons
 const createStatusIcon = (color: string) => L.divIcon({
@@ -12,15 +13,20 @@ const createStatusIcon = (color: string) => L.divIcon({
     iconAnchor: [8, 8],
 });
 
-
-
 const greenIcon = createStatusIcon("bg-emerald-500");
+const yellowIcon = createStatusIcon("bg-yellow-500");
 const redIcon = createStatusIcon("bg-red-500");
+const grayIcon = createStatusIcon("bg-gray-400");
 
-// Sample Data
-import { SITES } from "../../data/sites";
-
-
+function getSiteIcon(site: Site) {
+    if (!site.is_active) return grayIcon;
+    switch (site.latest_status) {
+        case 'Normal': return greenIcon;
+        case 'Warning': return yellowIcon;
+        case 'Alarm': return redIcon;
+        default: return grayIcon;
+    }
+}
 
 interface OverlayControlsProps {
     map: L.Map | null;
@@ -35,7 +41,7 @@ function OverlayControls({ map, isSidebarOpen, onToggleSidebar }: OverlayControl
         <div className="absolute inset-0 pointer-events-none z-[1000] p-4 flex flex-col justify-between">
             {/* Top Row */}
             <div className="flex justify-between items-start">
-                {/* Top Left - Show Sites / Directions */}
+                {/* Top Left - Show Sites */}
                 <div className="pointer-events-auto">
                     <div className="bg-white rounded shadow-md overflow-hidden flex flex-col w-[200px]">
                         <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-800 text-white">
@@ -68,7 +74,6 @@ function OverlayControls({ map, isSidebarOpen, onToggleSidebar }: OverlayControl
                             <Minus className="w-5 h-5" />
                         </button>
                     </div>
-
                     <button className="bg-[#1e293b] p-3 rounded-lg shadow-xl border border-gray-700 text-gray-300 hover:bg-gray-700 transition-colors mt-2">
                         <Maximize2 className="w-5 h-5" />
                     </button>
@@ -84,18 +89,25 @@ function OverlayControls({ map, isSidebarOpen, onToggleSidebar }: OverlayControl
                         <div className="space-y-2">
                             <div className="flex items-center gap-3">
                                 <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                                <span className="text-xs text-gray-300">Online Sites</span>
+                                <span className="text-xs text-gray-300">Normal</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <span className="text-xs text-gray-300">Warning</span>
                             </div>
                             <div className="flex items-center gap-3">
                                 <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                <span className="text-xs text-gray-300">Offline Sites</span>
+                                <span className="text-xs text-gray-300">Alarm</span>
                             </div>
-
+                            <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                                <span className="text-xs text-gray-300">Offline</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Bottom Right - Google Attribution Mock */}
+                {/* Bottom Right */}
                 <div className="pointer-events-auto bg-white/80 px-2 py-0.5 text-[10px] text-gray-600">
                     map data ©2026 Google
                 </div>
@@ -104,24 +116,18 @@ function OverlayControls({ map, isSidebarOpen, onToggleSidebar }: OverlayControl
     );
 }
 
-// Side Effect component to handle map invalidation on sidebar toggle
 function SidebarResizeHandler({ map, isSidebarOpen }: { map: L.Map | null, isSidebarOpen: boolean }) {
     useEffect(() => {
         if (!map) return;
-        setTimeout(() => {
-            map.invalidateSize();
-        }, 300);
+        setTimeout(() => { map.invalidateSize(); }, 300);
     }, [isSidebarOpen, map]);
     return null;
 }
 
-// Side Effect to fly to selected site
-function MapFlyTo({ map, site }: { map: L.Map | null, site: any }) {
+function MapFlyTo({ map, site }: { map: L.Map | null, site: Site | null }) {
     useEffect(() => {
         if (!map || !site) return;
-        map.flyTo([site.lat, site.lng], 13, {
-            duration: 1.5
-        });
+        map.flyTo([site.latitude, site.longitude], 13, { duration: 1.5 });
     }, [map, site]);
     return null;
 }
@@ -131,9 +137,10 @@ import { SitePreviewCard } from './SitePreviewCard';
 interface SiteMapProps {
     isSidebarOpen?: boolean;
     onToggleSidebar?: () => void;
-    selectedSite?: any;
+    selectedSite?: Site | null;
     onCloseSite?: () => void;
-    onSelectSite?: (site: any) => void;
+    onSelectSite?: (site: Site) => void;
+    sites?: Site[];
 }
 
 export default function SiteMap({
@@ -141,7 +148,8 @@ export default function SiteMap({
     onToggleSidebar = () => { },
     selectedSite = null,
     onCloseSite = () => { },
-    onSelectSite = () => { }
+    onSelectSite = () => { },
+    sites = [],
 }: SiteMapProps) {
     const [map, setMap] = useState<L.Map | null>(null);
 
@@ -165,7 +173,7 @@ export default function SiteMap({
                 }
             `}</style>
             <MapContainer
-                center={[-6.5, 107.2]} // Java, Indonesia
+                center={[-6.5, 107.2]}
                 zoom={9}
                 minZoom={5}
                 maxZoom={18}
@@ -180,11 +188,11 @@ export default function SiteMap({
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 />
 
-                {SITES.map(site => (
+                {sites.map(site => (
                     <Marker
                         key={site.id}
-                        position={[site.lat, site.lng]}
-                        icon={site.status === 'online' ? greenIcon : redIcon}
+                        position={[site.latitude, site.longitude]}
+                        icon={getSiteIcon(site)}
                         eventHandlers={{
                             click: () => onSelectSite(site),
                         }}
@@ -195,42 +203,37 @@ export default function SiteMap({
                             offset={[0, 5]}
                             className="custom-map-tooltip"
                         >
-                            {site.name}
+                            {site.site_name}
                         </Tooltip>
                         <Popup className="custom-popup">
                             <div className="font-sans">
-                                <h3 className="font-bold text-gray-900">{site.name}</h3>
-                                <p className={`text-xs font-bold ${site.status === 'online' ? 'text-emerald-600' : 'text-red-600'}`}>
-                                    {site.status.toUpperCase()}
+                                <h3 className="font-bold text-gray-900">{site.site_name}</h3>
+                                <p className={`text-xs font-bold ${site.latest_status === 'Normal' ? 'text-emerald-600' : site.latest_status === 'Warning' ? 'text-yellow-600' : 'text-red-600'}`}>
+                                    {site.is_active ? site.latest_status.toUpperCase() : 'OFFLINE'}
                                 </p>
+                                <p className="text-xs text-gray-500 mt-1">{site.region}</p>
                             </div>
                         </Popup>
                     </Marker>
                 ))}
 
-
                 <MapFlyTo map={map} site={selectedSite} />
             </MapContainer>
 
-            {/* Overlay UI Controls */}
             <OverlayControls map={map} isSidebarOpen={isSidebarOpen} onToggleSidebar={onToggleSidebar} />
 
-            {/* Site Preview Card Overlay */}
             {selectedSite && (
                 <SitePreviewCard
                     site={selectedSite}
                     onClose={onCloseSite}
                     onLocate={() => {
                         if (map && selectedSite) {
-                            map.flyTo([selectedSite.lat, selectedSite.lng], 13, {
-                                duration: 1.5
-                            });
+                            map.flyTo([selectedSite.latitude, selectedSite.longitude], 13, { duration: 1.5 });
                         }
                     }}
                 />
             )}
 
-            {/* Helper to handle map resize events */}
             <SidebarResizeHandler map={map} isSidebarOpen={isSidebarOpen} />
         </div>
     );

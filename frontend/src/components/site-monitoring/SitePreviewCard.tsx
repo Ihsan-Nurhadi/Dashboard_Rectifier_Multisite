@@ -3,15 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { X, MapPin, Eye } from 'lucide-react';
-
-interface Site {
-    id: number;
-    name: string;
-    lat: number;
-    lng: number;
-    status: string;
-    siteCode?: string;
-}
+import { Site } from '@/services/api';
 
 interface SitePreviewCardProps {
     site: Site;
@@ -23,18 +15,26 @@ export function SitePreviewCard({ site, onClose, onLocate }: SitePreviewCardProp
     const router = useRouter();
 
     const handleViewDetails = () => {
-        if (site.siteCode) {
-            router.push(`/dashboard/${site.siteCode}`);
+        router.push(`/dashboard/${site.site_code}`);
+    };
+
+    const statusColor = () => {
+        if (!site.is_active) return 'text-gray-400';
+        switch (site.latest_status) {
+            case 'Normal': return 'text-emerald-400';
+            case 'Warning': return 'text-yellow-400';
+            case 'Alarm': return 'text-red-400';
+            default: return 'text-gray-400';
         }
     };
 
     return (
-        <div className="absolute bottom-6 right-6 z-[1000] w-[350px] bg-[#1e293b] rounded-lg shadow-2xl border border-gray-700 overflow-hidden font-sans animation-fade-in-up">
+        <div className="absolute bottom-6 right-6 z-[1000] w-[350px] bg-[#1e293b] rounded-lg shadow-2xl border border-gray-700 overflow-hidden font-sans">
             <div className="p-4">
                 {/* Header with Close Button */}
                 <div className="flex justify-between items-start mb-1">
                     <h3 className="text-white font-bold text-lg uppercase tracking-wide pr-8 leading-tight">
-                        {site.name}
+                        {site.site_name}
                     </h3>
                     <button
                         onClick={onClose}
@@ -45,10 +45,34 @@ export function SitePreviewCard({ site, onClose, onLocate }: SitePreviewCardProp
                     </button>
                 </div>
 
-                {/* Location */}
-                <div className="text-gray-400 text-sm mb-4">
-                    {site.siteCode ? `Site Code: ${site.siteCode}` : 'Setu, Tangerang'}
+                {/* Info */}
+                <div className="text-gray-400 text-sm mb-1">
+                    Site Code: <span className="text-gray-300 font-mono">{site.site_code}</span>
                 </div>
+                <div className="text-gray-400 text-sm mb-1">
+                    Region: <span className="text-gray-300">{site.region}</span>
+                </div>
+                <div className={`text-sm font-bold mb-4 ${statusColor()}`}>
+                    Status: {site.is_active ? site.latest_status.toUpperCase() : 'OFFLINE'}
+                </div>
+
+                {/* Quick stats */}
+                {site.is_active && (
+                    <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+                        <div className="bg-[#0f172a] rounded p-2">
+                            <div className="text-xs text-gray-500">VDC</div>
+                            <div className="text-white text-sm font-bold">{site.latest_vdc?.toFixed(1) ?? '—'} V</div>
+                        </div>
+                        <div className="bg-[#0f172a] rounded p-2">
+                            <div className="text-xs text-gray-500">Load</div>
+                            <div className="text-white text-sm font-bold">{site.latest_load?.toFixed(1) ?? '—'} A</div>
+                        </div>
+                        <div className="bg-[#0f172a] rounded p-2">
+                            <div className="text-xs text-gray-500">Temp</div>
+                            <div className="text-white text-sm font-bold">{site.latest_temp?.toFixed(1) ?? '—'} °C</div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex gap-2 mt-4">
