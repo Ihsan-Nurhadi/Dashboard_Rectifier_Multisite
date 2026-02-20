@@ -1,0 +1,128 @@
+services:
+  # ─────────────────────────────
+  # PostgreSQL Database
+  # ─────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: rectifier_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rectifier_db}
+      POSTGRES_USER: ${POSTGRES_USER:-rectifier_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smpn216jakarta}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rectifier_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rectifier_user} -d ${POSTGRES_DB:-rectifier_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────
+  # Django Backend
+  # ─────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rectifier_backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.production
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+    volumes:
+      - static_files:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - rectifier_net
+
+  # ─────────────────────────────
+  # MQTT Listener (backend service)
+  # ─────────────────────────────
+  mqtt_listener:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rectifier_mqtt_listener
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.production
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+    command: python mqtt_listener_multisite.py
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - rectifier_net
+
+  # ─────────────────────────────
+  # MQTT Publisher (simulator)
+  # ─────────────────────────────
+  mqtt_publisher:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rectifier_mqtt_publisher
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.production
+    command: python /app/../mqtt_publisher_multisite.py
+    volumes:
+      - ./mqtt_publisher_multisite.py:/app/mqtt_publisher_multisite.py:ro
+    networks:
+      - rectifier_net
+
+  # ─────────────────────────────
+  # Next.js Frontend
+  # ─────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rectifier_frontend
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://103.176.45.14:3000/api
+      - NEXT_PUBLIC_MAP_CENTER_LAT=-6.2
+      - NEXT_PUBLIC_MAP_CENTER_LNG=106.8
+      - NEXT_PUBLIC_MAP_ZOOM=11
+    networks:
+      - rectifier_net
+
+  # ─────────────────────────────
+  # Nginx Reverse Proxy
+  # ─────────────────────────────
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: rectifier_nginx
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - static_files:/app/staticfiles:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - rectifier_net
+
+# ─────────────────────────────
+# Volumes & Networks
+# ─────────────────────────────
+volumes:
+  postgres_data:
+  static_files:
+
+networks:
+  rectifier_net:
+    driver: bridge
