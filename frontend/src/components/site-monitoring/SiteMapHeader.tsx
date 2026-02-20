@@ -1,10 +1,25 @@
+"use client";
+
 import { Building2, Satellite } from "lucide-react";
-import { SITES } from "../../data/sites";
+import { useEffect, useState } from "react";
+import { RectifierAPI, Site } from "@/services/api";
 
 export function SiteMapHeader() {
-  const totalSites = SITES.length;
-  const onlineSites = SITES.filter(s => s.status === 'online').length;
-  const offlineSites = SITES.filter(s => s.status === 'offline').length;
+  const [sites, setSites] = useState<Site[]>([]);
+
+  useEffect(() => {
+    const fetchSites = async () => {
+      const data = await RectifierAPI.getSites();
+      setSites(data);
+    };
+    fetchSites();
+    const interval = setInterval(fetchSites, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const totalSites = sites.length;
+  const onlineSites = sites.filter(s => s.is_active && s.latest_status === 'Normal').length;
+  const warningSites = sites.filter(s => s.is_active && (s.latest_status === 'Warning' || s.latest_status === 'Alarm')).length;
 
   return (
     <div className="bg-[#0f172a] text-white p-4 flex justify-between items-center shadow-md z-50 relative shrink-0">
@@ -41,14 +56,14 @@ export function SiteMapHeader() {
           </div>
         </div>
 
-        {/* Offline Sites Card */}
+        {/* Warning/Alarm Sites Card */}
         <div className="bg-[#1e293b] rounded-lg p-3 flex items-center gap-3 min-w-[140px] border border-gray-800">
-          <div className="p-2 bg-slate-700/30 rounded-lg">
-            <div className="w-2.5 h-2.5 rounded-full bg-slate-500"></div>
+          <div className="p-2 bg-yellow-900/30 rounded-lg">
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Offline</p>
-            <p className="text-xl font-bold">{offlineSites}</p>
+            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Warning/Alarm</p>
+            <p className="text-xl font-bold text-yellow-400">{warningSites}</p>
           </div>
         </div>
       </div>
