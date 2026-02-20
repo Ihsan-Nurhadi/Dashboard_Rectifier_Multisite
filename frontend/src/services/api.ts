@@ -40,7 +40,15 @@ export class RectifierAPI {
         throw new Error('Failed to fetch sites');
       }
 
-      return await response.json();
+      const data = await response.json();
+
+      // Handle Django REST Framework paginated response: { count, results: [...] }
+      if (data && Array.isArray(data.results)) {
+        return data.results as Site[];
+      }
+
+      // Fallback: response is already a plain array
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error('Error fetching sites:', error);
       return [];
