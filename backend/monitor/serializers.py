@@ -9,34 +9,46 @@ class SiteListSerializer(serializers.ModelSerializer):
     latest_temp = serializers.SerializerMethodField()
     latest_status = serializers.SerializerMethodField()
     last_update = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Site
         fields = [
-            'id', 'site_code', 'site_name', 
+            'id', 'site_code', 'site_name',
             'latitude', 'longitude', 'region', 'address',
             'project_id', 'ladder', 'sla',
             'latest_vdc', 'latest_load', 'latest_temp',
             'latest_status', 'last_update', 'is_active'
         ]
-    
+
+    def _get_cached_latest(self, obj):
+        """
+        PERBAIKAN N+1 QUERY:
+        Cache hasil get_latest_data() per objek Site agar semua field
+        (vdc, load, temp, status, last_update) hanya trigger 1 DB query
+        per site, bukan 4 query terpisah.
+        """
+        if not hasattr(obj, '_latest_data_cache'):
+            obj._latest_data_cache = obj.get_latest_data()
+        return obj._latest_data_cache
+
     def get_latest_vdc(self, obj):
-        latest = obj.get_latest_data()
+        latest = self._get_cached_latest(obj)
         return latest.vdc_output if latest else None
-    
+
     def get_latest_load(self, obj):
-        latest = obj.get_latest_data()
+        latest = self._get_cached_latest(obj)
         return latest.load_current if latest else None
-    
+
     def get_latest_temp(self, obj):
-        latest = obj.get_latest_data()
+        latest = self._get_cached_latest(obj)
         return latest.temperature if latest else None
-    
+
     def get_latest_status(self, obj):
-        return obj.get_status()
-    
+        latest = self._get_cached_latest(obj)
+        return latest.status_realtime if latest else 'Unknown'
+
     def get_last_update(self, obj):
-        latest = obj.get_latest_data()
+        latest = self._get_cached_latest(obj)
         return latest.created_at.isoformat() if latest else None
 
 

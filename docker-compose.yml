@@ -91,6 +91,35 @@ services:
       - rectifier_net
 
   # ─────────────────────────────
+  # Auto Cleanup Scheduler
+  # Hapus data rectifier > 1 hari setiap jam sekali
+  # ─────────────────────────────
+  cleanup_scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rectifier_cleanup
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.production
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+    command: >
+      sh -c "echo 'Cleanup scheduler started. Running every hour.';
+             while true; do
+               echo \"[$(date -u '+%Y-%m-%d %H:%M:%S')] Running cleanup...\";
+               python manage.py cleanup_old_data --days 1;
+               echo 'Next cleanup in 1 hour.';
+               sleep 3600;
+             done"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - rectifier_net
+
+  # ─────────────────────────────
   # Next.js Frontend
   # ─────────────────────────────
   frontend:
