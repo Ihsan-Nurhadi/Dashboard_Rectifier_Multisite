@@ -107,6 +107,15 @@ SITES = [
         'region': 'Bali',
         'project_id': '23XL05C0010',
     },
+    {
+        'site_code': 'DPK',
+        'site_name': 'Ridwan Rais Rectifier Site',
+        'latitude': -6.37506955637493,
+        'longitude': 106.82506451349369,
+        'region': 'Depok',
+        'project_id': '233CXL30990',
+        'real_device': True,
+    },
 ]
 
 # Only simulate sites that don't have real devices

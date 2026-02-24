@@ -10,4 +10,5 @@ export const SITES = [
     { id: 9, lat: 1.1301, lng: 104.0529, name: "Batam", status: "online", location: "Batam, Riau Islands", siteCode: "BTM" },
     { id: 10, lat: 0.5333, lng: 101.4500, name: "Pekanbaru", status: "online", location: "Pekanbaru, Riau", siteCode: "PKU" },
     { id: 11, lat: -8.6705, lng: 115.2126, name: "Denpasar", status: "online", location: "Denpasar, Bali", siteCode: "DPS" },
+    { id: 12, lat: -6.37506955637493, lng: 106.82506451349369, name: "Ridwan Rais", status: "online", location: "Depok, Jawa Barat", siteCode: "DPK" },
 ];

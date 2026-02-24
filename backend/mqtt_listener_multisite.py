@@ -28,20 +28,35 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Real device topic mapping
-# Topic 'rectifier/data' (real device from Node-RED) -> mapped to NYK Workshop
-REAL_DEVICE_TOPIC = 'rectifier/data'
-REAL_DEVICE_SITE_CODE = 'NYK'
+# Setiap real device dipetakan: topic_eksak -> site_code
+REAL_DEVICE_TOPICS = {
+    'rectifier/data':     'NYK',  # NYK Workshop (Node-RED legacy topic)
+    'rectifier/DPK/data': 'DPK',  # Ridwan Rais (real device baru)
+}
+
+
+def topic_covered_by_pattern(topic: str, pattern: str) -> bool:
+    """Cek apakah topic sudah ter-cover oleh wildcard pattern MQTT"""
+    topic_parts = topic.split('/')
+    pattern_parts = pattern.split('/')
+    if len(topic_parts) != len(pattern_parts):
+        return False
+    return all(p == '+' or p == t for t, p in zip(topic_parts, pattern_parts))
 
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         logger.info(f"✓ Connected to MQTT Broker: {settings.MQTT_BROKER}")
-        # Subscribe to simulated multi-site topics
+        # Subscribe ke pattern (mencakup semua simulated + real device yg formatnya sama)
         client.subscribe(settings.MQTT_TOPIC_PATTERN)
-        logger.info(f"✓ Subscribed to: {settings.MQTT_TOPIC_PATTERN}")
-        # Subscribe to real device topic
-        client.subscribe(REAL_DEVICE_TOPIC)
-        logger.info(f"✓ Subscribed to real device: {REAL_DEVICE_TOPIC} -> site {REAL_DEVICE_SITE_CODE}")
+        logger.info(f"✓ Subscribed to pattern: {settings.MQTT_TOPIC_PATTERN}")
+        # Subscribe hanya real device topics yang TIDAK ter-cover wildcard pattern
+        for topic, site_code in REAL_DEVICE_TOPICS.items():
+            if not topic_covered_by_pattern(topic, settings.MQTT_TOPIC_PATTERN):
+                client.subscribe(topic)
+                logger.info(f"✓ Subscribed to real device (extra): {topic} -> site {site_code}")
+            else:
+                logger.info(f"✓ Real device topic covered by pattern: {topic} -> site {site_code}")
     else:
         logger.error(f"✗ Connection failed, rc: {rc}")
 
@@ -51,10 +66,10 @@ def on_message(client, userdata, msg):
         # Determine site_code based on topic
         topic_parts = msg.topic.split('/')
         
-        if msg.topic == REAL_DEVICE_TOPIC:
-            # Real device: rectifier/data -> map to JKT
-            site_code = REAL_DEVICE_SITE_CODE
-            logger.info(f"📡 REAL DEVICE data received -> mapped to site: {site_code}")
+        if msg.topic in REAL_DEVICE_TOPICS:
+            # Real device: cari site_code dari dictionary
+            site_code = REAL_DEVICE_TOPICS[msg.topic]
+            logger.info(f"📡 REAL DEVICE [{msg.topic}] -> site: {site_code}")
         elif len(topic_parts) == 3:
             # Simulated: rectifier/{site_code}/data
             site_code = topic_parts[1]
