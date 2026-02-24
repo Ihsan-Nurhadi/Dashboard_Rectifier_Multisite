@@ -21,9 +21,9 @@ export function RectifierStatusCard({ data }: RectifierStatusCardProps) {
     { label: "Load Current DC Out", value: data.loadCurrent, unit: "A", variant: "success" },
     { label: "Load Power DC", value: data.loadPower, unit: "kW", variant: "success" },
 
-    { label: "PAC Load Phase L1", value: data.pacLoadL1.toFixed(2), unit: "W", variant: "success" },
-    { label: "PAC Load Phase L2", value: data.pacLoadL2.toFixed(2), unit: "W", variant: "success" },
-    { label: "PAC Load Phase L3", value: data.pacLoadL3.toFixed(2), unit: "W", variant: "success" },
+    { label: "PAC Load Phase L1", value: data.pacLoadL1 != null ? data.pacLoadL1.toFixed(2) : '-', unit: "W", variant: "success" },
+    { label: "PAC Load Phase L2", value: data.pacLoadL2 != null ? data.pacLoadL2.toFixed(2) : '-', unit: "W", variant: "success" },
+    { label: "PAC Load Phase L3", value: data.pacLoadL3 != null ? data.pacLoadL3.toFixed(2) : '-', unit: "W", variant: "success" },
     { label: "Rectifier Current DC", value: data.rectifierCurrent, unit: "A", variant: "info" },
     { label: "Total Power DC", value: data.totalPower, unit: "kW", variant: "info" },
   ];
@@ -31,7 +31,7 @@ export function RectifierStatusCard({ data }: RectifierStatusCardProps) {
   return (
     <Card className="col-span-12">
       <CardHeader title="Rectifier Status" icon={<Gauge className="w-4 h-4 text-indigo-500" />} />
-      
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {metrics.map((metric, index) => (
           <MetricItem
