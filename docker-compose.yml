@@ -129,7 +129,7 @@ services:
     container_name: rectifier_frontend
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_API_URL=http://103.176.45.14:3000/api
+      - NEXT_PUBLIC_API_URL=http://110.232.92.134:3000/api
       - NEXT_PUBLIC_MAP_CENTER_LAT=-6.2
       - NEXT_PUBLIC_MAP_CENTER_LNG=106.8
       - NEXT_PUBLIC_MAP_ZOOM=11

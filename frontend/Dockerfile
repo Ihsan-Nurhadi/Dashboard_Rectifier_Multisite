@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Declare build arguments for NEXT_PUBLIC env vars (needed at build time)
-ARG NEXT_PUBLIC_API_URL=http://103.176.45.14:3000/api
+ARG NEXT_PUBLIC_API_URL=http://110.232.92.134:3000/api
 ARG NEXT_PUBLIC_MAP_CENTER_LAT=-6.2
 ARG NEXT_PUBLIC_MAP_CENTER_LNG=106.8
 ARG NEXT_PUBLIC_MAP_ZOOM=11
