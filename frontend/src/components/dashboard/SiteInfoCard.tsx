@@ -1,6 +1,7 @@
 import { Card, CardHeader } from "@/components/ui/Card";
 import { Info } from "lucide-react";
 import { SiteInfo } from "@/types";
+import { formatJakartaTime } from "@/lib/utils";
 import dynamic from 'next/dynamic';
 
 const Map = dynamic(() => import('@/components/ui/Map'), {
@@ -61,7 +62,7 @@ export function SiteInfoCard({ data }: SiteInfoCardProps) {
 
           <div className="mt-auto">
             <span className="text-xs font-medium text-gray-400 uppercase block mb-1">Last Data</span>
-            <span className="text-xs font-mono text-gray-600">{data.lastData}</span>
+            <span className="text-xs font-mono text-gray-600">{formatJakartaTime(data.lastData)} WIB</span>
           </div>
         </div>
 

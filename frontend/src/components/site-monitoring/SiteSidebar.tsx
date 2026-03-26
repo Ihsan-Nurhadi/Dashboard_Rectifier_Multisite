@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { Site } from "@/services/api";
+import { formatJakartaTime } from "@/lib/utils";
 
 export interface SiteSidebarProps {
     sites?: Site[];
@@ -99,7 +100,7 @@ export function SiteSidebar({ sites = [], onSelectSite }: SiteSidebarProps) {
                                         <h3 className="font-bold text-sm text-white uppercase tracking-wide">{site.site_name}</h3>
                                         <p className="text-xs text-gray-400">{site.region}</p>
                                         <p className="text-[10px] text-gray-500 pt-1">
-                                            {site.last_update ? new Date(site.last_update).toLocaleString('id-ID') : 'No data'}
+                                            {formatJakartaTime(site.last_update)} WIB
                                         </p>
                                     </div>
                                 </div>

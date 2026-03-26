@@ -7,6 +7,7 @@ import { RectifierModuleStatusCard } from "@/components/dashboard/RectifierModul
 import { RectifierStatusCard } from "@/components/dashboard/RectifierStatusCard";
 import { BatteryStatusCard } from "@/components/dashboard/BatteryStatusCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { formatJakartaTime } from "@/lib/utils";
 
 export default function Dashboard() {
     const data = useDashboardData();
@@ -32,7 +33,7 @@ export default function Dashboard() {
                 </div>
 
                 <footer className="text-center text-xs text-gray-400 mt-12 pb-4 font-mono">
-                    Last updated: {data.siteInfo.lastData} UTC
+                    Last updated: {formatJakartaTime(data.siteInfo.lastData)} WIB
                 </footer>
             </div>
         </div>

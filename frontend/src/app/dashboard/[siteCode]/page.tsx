@@ -10,6 +10,7 @@ import { RectifierStatusCard } from "@/components/dashboard/RectifierStatusCard"
 import { BatteryStatusCard } from "@/components/dashboard/BatteryStatusCard";
 import { RectifierAPI } from '@/services/api';
 import { DashboardData } from '@/types';
+import { formatJakartaTime } from '@/lib/utils';
 
 export default function SiteDashboard({ 
   params 
@@ -91,7 +92,7 @@ export default function SiteDashboard({
         </div>
         
         <footer className="text-center text-xs text-gray-400 mt-12 pb-4 font-mono">
-          Last updated: {data.siteInfo.lastData} | Site: {data.siteInfo.projectId}
+          Last updated: {formatJakartaTime(data.siteInfo.lastData)} WIB | Site: {data.siteInfo.projectId}
         </footer>
       </div>
     </div>
